@@ -1,20 +1,11 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "builds": [
-    {
-      "src": "api/index.php",
-      "use": "@vercel/php"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+  "version": 2,
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.7.3"
     }
-  ],
+  },
   "routes": [
-    {
-      "handle": "filesystem"
-    },
     {
       "src": "/(.*)",
       "dest": "/api/index.php"

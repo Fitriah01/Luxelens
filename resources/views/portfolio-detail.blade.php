@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -440,6 +440,8 @@
                 columns: 1;
             }
         }
+
+        @include('partials.portfolio-shared-styles')
     </style>
 </head>
 
@@ -458,55 +460,71 @@
         </a>
     </nav>
 
+    @php
+        $categoryLabels = [
+            'wedding' => 'Wedding',
+            'wisuda' => 'Graduation',
+            'prewed' => 'Pre-Wedding',
+            'family' => 'Family',
+        ];
+        $categoryLabel = $categoryLabels[$category] ?? \Illuminate\Support\Str::headline($category);
+    @endphp
+
     {{-- HERO --}}
-    <section class="pf-hero">
-        <p class="pf-eyebrow">LuxeLens Photography</p>
-        <h1 class="pf-hero-title">The <em>{{ ucfirst($category) }}</em> Stories</h1>
+    <section class="pf-hero portfolio-hero">
+        <p class="pf-eyebrow portfolio-eyebrow">LuxeLens Photography</p>
+        <h1 class="pf-hero-title portfolio-title">The <em>{{ $categoryLabel }}</em> Stories</h1>
+        <p class="portfolio-subtitle">Koleksi {{ strtolower($categoryLabel) }} dengan ritme tampilan yang seragam,
+            sinematik, dan lebih mewah di setiap frame.</p>
         <div class="pf-divider"></div>
     </section>
 
     {{-- VIDEO SHOWCASE --}}
     @php
-        /*
-         * Tambahkan file video ke folder: public/videos/
-         * Format penamaan: {kategori}1.mp4, {kategori}2.mp4, {kategori}3.mp4
-         * Contoh: wedding1.mp4, wedding2.mp4, wedding3.mp4
-         *         wisuda1.mp4,  wisuda2.mp4,  wisuda3.mp4
-         *         prewed1.mp4,  prewed2.mp4,  prewed3.mp4
-         *         family1.mp4,  family2.mp4,  family3.mp4
-         *
-         * Jika file belum ada, akan fallback ke video.mp4
-         */
         $categoryVideos = [
-            'wedding' => ['wedding1.mp4', 'wedding2.mp4', 'wedding3.mp4'],
-            'wisuda' => ['wisuda1.mp4', 'wisuda2.mp4', 'wisuda3.mp4'],
-            'prewed' => ['prewed1.mp4', 'prewed2.mp4', 'prewed3.mp4'],
-            'family' => ['family1.mp4', 'family2.mp4', 'family3.mp4'],
+            'wedding' => ['VidWedding1.mp4', 'VidWedding2.mp4', 'VidWedding3.mp4'],
+            'wisuda' => ['VidGrad1.mp4', 'VidGrad2.mp4', 'VidGrad3.mp4'],
+            'prewed' => ['VidPrewed1.mp4', 'VidPrewed2.mp4', 'VidPrewed3.mp4'],
+            'family' => ['VidFamily1.mp4', 'VidFamily2.mp4', 'VidFamily3.mp4'],
         ];
 
         $currentVideos = $categoryVideos[$category] ?? ['video.mp4', 'video.mp4', 'video.mp4'];
     @endphp
 
-    <section class="pf-video-section">
-        <p class="pf-section-label">Film Highlights</p>
-        <div class="pf-video-grid">
+    <section class="pf-video-section portfolio-shell">
+        <div class="portfolio-section-head">
+            <p class="portfolio-section-kicker">Film Highlights</p>
+            <h2 class="portfolio-section-title">Signature <em>{{ $categoryLabel }}</em> Reels</h2>
+            <p class="portfolio-section-copy">Semua video menggunakan grid universal dengan rasio 16:9 agar susunan
+                antar kategori tetap seimbang dan bebas ruang kosong yang mengganggu.</p>
+        </div>
+        <div class="pf-video-grid portfolio-video-grid">
+
+            @php
+                $portfolioVideoItems = [];
+            @endphp
 
             @foreach ($currentVideos as $vi => $videoFile)
                 @php
                     $videoId = 'pf-vid-' . ($vi + 1);
                     $videoPath = public_path('videos/' . $videoFile);
                     $videoSrc = file_exists($videoPath) ? asset('videos/' . $videoFile) : asset('videos/video.mp4');
+                    $portfolioVideoItems[] = [
+                        'src' => $videoSrc,
+                        'label' => $categoryLabel . ' Film ' . ($vi + 1),
+                    ];
                 @endphp
-                <div class="pf-video-item" id="{{ $videoId }}">
-                    <video src="{{ $videoSrc }}" preload="metadata" playsinline loop></video>
-                    <div class="pf-vid-click" onclick="pfToggleVideo('{{ $videoId }}')"></div>
-                    <div class="pf-play-btn">
-                        <div class="pf-play-circle">
+                <div class="pf-video-item portfolio-video-card" id="{{ $videoId }}">
+                    <video src="{{ $videoSrc }}" preload="metadata" playsinline loop muted></video>
+                    <div class="pf-vid-click" onclick="pfOpenVideoLb({{ $vi }})"></div>
+                    <div class="pf-play-btn portfolio-video-overlay">
+                        <div class="pf-play-circle portfolio-play-button">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="#BFA15A">
                                 <path d="M8 5.14v14l11-7-11-7z" />
                             </svg>
                         </div>
                     </div>
+                    <span class="portfolio-video-label">{{ $categoryLabel }} Film {{ $vi + 1 }}</span>
                 </div>
             @endforeach
 
@@ -514,15 +532,20 @@
     </section>
 
     {{-- PHOTO GALLERY --}}
-    <section class="pf-gallery-section">
-        <p class="pf-section-label">Photo Collection</p>
+    <section class="pf-gallery-section portfolio-shell">
+        <div class="portfolio-section-head">
+            <p class="portfolio-section-kicker">Photo Collection</p>
+            <h2 class="portfolio-section-title">Curated <em>{{ $categoryLabel }}</em> Frames</h2>
+            <p class="portfolio-section-copy">Galeri foto tetap mempertahankan konten yang sama, namun kini mengikuti
+                struktur visual yang lebih rapi dan konsisten dengan area video.</p>
+        </div>
 
         @if ($photos->count())
             <div class="pf-masonry">
                 @foreach ($photos as $foto)
                     <div class="pf-masonry-item" onclick="pfOpenLb({{ $loop->index }})">
-                        <img src="{{ asset('storage/portfolio/' . $foto->filename) }}"
-                            alt="{{ ucfirst($category) }} {{ $loop->iteration }}" loading="lazy">
+                        <img src="{{ $foto->image_url }}" alt="{{ ucfirst($category) }} {{ $loop->iteration }}"
+                            loading="lazy">
                         <div class="pf-item-overlay">
                             <div class="pf-overlay-icon">
                                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white"
@@ -561,30 +584,168 @@
         <div class="pf-lb-counter" id="pf-lb-counter"></div>
     </div>
 
+    <div id="pf-video-lightbox" class="portfolio-video-lightbox">
+        <div class="portfolio-video-stage">
+            <button class="portfolio-video-modal-close" type="button" onclick="pfCloseVideoLb()"
+                aria-label="Close video viewer">✕</button>
+            <button class="portfolio-video-modal-nav portfolio-video-modal-prev" type="button"
+                onclick="pfVideoNav(-1)" aria-label="Previous video">‹</button>
+            <div class="portfolio-video-frame">
+                <div id="pf-video-overlay" class="portfolio-video-cinematic-overlay">
+                    <div class="portfolio-video-title-wrap">
+                        <span class="portfolio-video-kicker">LuxeLens Cinema</span>
+                        <h3 id="pf-video-title" class="portfolio-video-title">Portfolio Film</h3>
+                    </div>
+                    <div class="portfolio-video-actions">
+                        <button id="pf-video-fullscreen" class="portfolio-video-fullscreen" type="button"
+                            aria-label="Toggle native fullscreen" onclick="pfToggleVideoFullscreen()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                                <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+                                <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
+                                <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                            </svg>
+                            <span class="portfolio-video-fullscreen-label">Fullscreen</span>
+                        </button>
+                    </div>
+                </div>
+                <video id="pf-video-player" class="portfolio-video-player" controls playsinline
+                    preload="auto"></video>
+            </div>
+            <button class="portfolio-video-modal-nav portfolio-video-modal-next" type="button"
+                onclick="pfVideoNav(1)" aria-label="Next video">›</button>
+            <div class="portfolio-video-caption">
+                <strong id="pf-video-caption">Portfolio Film</strong>
+                <span class="portfolio-video-counter" id="pf-video-counter">01 / 03</span>
+            </div>
+        </div>
+    </div>
+
     <script>
-        /* ── VIDEO ── */
-        function pfToggleVideo(id) {
-            const wrap = document.getElementById(id);
-            const vid = wrap.querySelector('video');
-            if (vid.paused) {
-                document.querySelectorAll('.pf-video-item video').forEach(v => {
-                    if (v !== vid) {
-                        v.pause();
-                        v.closest('.pf-video-item').classList.remove('playing');
-                    }
-                });
-                vid.play();
-                wrap.classList.add('playing');
-            } else {
-                vid.pause();
-                wrap.classList.remove('playing');
+        /* ── VIDEO LIGHTBOX ── */
+        const pfVideoItems = @json($portfolioVideoItems);
+        const pfVideoLightbox = document.getElementById('pf-video-lightbox');
+        const pfVideoPlayer = document.getElementById('pf-video-player');
+        const pfVideoCaption = document.getElementById('pf-video-caption');
+        const pfVideoCounter = document.getElementById('pf-video-counter');
+        const pfVideoTitle = document.getElementById('pf-video-title');
+        const pfVideoOverlay = document.getElementById('pf-video-overlay');
+        const pfVideoFrame = pfVideoPlayer?.closest('.portfolio-video-frame');
+        let pfVideoCurrent = 0;
+        let pfVideoOverlayTimer = null;
+
+        function pfShowVideoOverlay(autoHide = true) {
+            if (!pfVideoOverlay) return;
+            pfVideoOverlay.classList.remove('is-hidden');
+            if (pfVideoOverlayTimer) clearTimeout(pfVideoOverlayTimer);
+            if (autoHide) {
+                pfVideoOverlayTimer = setTimeout(() => {
+                    pfVideoOverlay.classList.add('is-hidden');
+                }, 3000);
             }
         }
+
+        function pfGetFullscreenElement() {
+            return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+        }
+
+        function pfRequestFullscreen(element) {
+            if (element.requestFullscreen) return element.requestFullscreen();
+            if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
+            if (element.msRequestFullscreen) return element.msRequestFullscreen();
+        }
+
+        function pfExitFullscreen() {
+            if (document.exitFullscreen) return document.exitFullscreen();
+            if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+            if (document.msExitFullscreen) return document.msExitFullscreen();
+        }
+
+        function pfToggleVideoFullscreen() {
+            if (!pfVideoFrame) return;
+            if (pfGetFullscreenElement()) {
+                pfExitFullscreen();
+                return;
+            }
+            pfRequestFullscreen(pfVideoFrame);
+        }
+
+        function pfSyncVideoCardState() {
+            document.querySelectorAll('.portfolio-video-card').forEach((card, index) => {
+                card.classList.toggle('playing', index === pfVideoCurrent && pfVideoLightbox.classList.contains(
+                    'open'));
+            });
+        }
+
+        function pfRenderVideoLb() {
+            const current = pfVideoItems[pfVideoCurrent];
+            if (!current) return;
+
+            pfVideoPlayer.classList.add('is-switching');
+            pfVideoPlayer.src = current.src;
+            pfVideoPlayer.load();
+            pfVideoPlayer.currentTime = 0;
+            const playAttempt = pfVideoPlayer.play();
+            if (playAttempt && typeof playAttempt.catch === 'function') {
+                playAttempt.catch(() => {
+                    pfVideoPlayer.muted = true;
+                    pfVideoPlayer.play().catch(() => {});
+                });
+            }
+
+            pfVideoCaption.textContent = current.label;
+            pfVideoTitle.textContent = current.label;
+            pfVideoCounter.textContent = String(pfVideoCurrent + 1).padStart(2, '0') + ' / ' + String(pfVideoItems.length)
+                .padStart(2, '0');
+            pfSyncVideoCardState();
+            pfShowVideoOverlay(true);
+        }
+
+        function pfOpenVideoLb(index) {
+            pfVideoCurrent = index;
+            pfVideoLightbox.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            pfRenderVideoLb();
+        }
+
+        function pfCloseVideoLb() {
+            if (pfVideoOverlayTimer) clearTimeout(pfVideoOverlayTimer);
+            pfVideoPlayer.pause();
+            pfVideoPlayer.removeAttribute('src');
+            pfVideoPlayer.load();
+            pfVideoLightbox.classList.remove('open');
+            document.body.style.overflow = '';
+            document.querySelectorAll('.portfolio-video-card').forEach(card => card.classList.remove('playing'));
+        }
+
+        function pfVideoNav(dir) {
+            pfVideoCurrent = (pfVideoCurrent + dir + pfVideoItems.length) % pfVideoItems.length;
+            pfRenderVideoLb();
+        }
+
+        pfVideoLightbox?.addEventListener('click', event => {
+            if (event.target === pfVideoLightbox) pfCloseVideoLb();
+        });
+
+        pfVideoPlayer?.addEventListener('playing', () => {
+            pfVideoPlayer.classList.remove('is-switching');
+            pfShowVideoOverlay(true);
+        });
+        pfVideoPlayer?.addEventListener('pause', () => pfShowVideoOverlay(false));
+        pfVideoPlayer?.addEventListener('mousemove', () => pfShowVideoOverlay(!pfVideoPlayer.paused));
+        pfVideoPlayer?.addEventListener('click', () => pfShowVideoOverlay(!pfVideoPlayer.paused));
+        pfVideoPlayer?.addEventListener('dblclick', () => pfToggleVideoFullscreen());
+        pfVideoFrame?.addEventListener('mousemove', () => pfShowVideoOverlay(!pfVideoPlayer.paused));
+
+        ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(eventName => {
+            document.addEventListener(eventName, () => pfShowVideoOverlay(!pfVideoPlayer.paused));
+        });
 
         /* ── LIGHTBOX ── */
         const pfPhotos = [
             @foreach ($photos as $foto)
-                "{{ asset('storage/portfolio/' . $foto->filename) }}",
+                "{{ $foto->image_url }}",
             @endforeach
         ];
 
@@ -624,6 +785,13 @@
         });
 
         document.addEventListener('keydown', e => {
+            if (pfVideoLightbox.classList.contains('open')) {
+                if (e.key === 'Escape') pfCloseVideoLb();
+                if (e.key === 'ArrowLeft') pfVideoNav(-1);
+                if (e.key === 'ArrowRight') pfVideoNav(1);
+                return;
+            }
+
             if (!document.getElementById('pf-lightbox').classList.contains('open')) return;
             if (e.key === 'Escape') pfCloseLb();
             if (e.key === 'ArrowLeft') pfLbNav(-1);

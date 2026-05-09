@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\Auth;
 
 class UserDashboard extends Component
 {
+    private function fullyPaidBookingsQuery(int $userId)
+    {
+        return Booking::where('user_id', $userId)
+            ->where(function ($query) {
+                $query->where('payment_status', 'full_payment')
+                    ->orWhereIn('status', ['Lunas', 'Editing', 'Selesai']);
+            });
+    }
+
     public function render()
     {
         $user = Auth::user();
@@ -38,8 +47,7 @@ class UserDashboard extends Component
         }
 
         // Completed bookings with results link
-        $completed = Booking::where('user_id', $user->id)
-            ->where('status', 'Lunas')
+        $completed = $this->fullyPaidBookingsQuery($user->id)
             ->whereNotNull('link_results')
             ->latest()
             ->take(6)
@@ -51,9 +59,7 @@ class UserDashboard extends Component
             ->first();
 
         // Total spent (confirmed payments)
-        $totalSpent = Booking::where('user_id', $user->id)
-            ->where('status', 'Lunas')
-            ->sum('harga');
+        $totalSpent = $this->fullyPaidBookingsQuery($user->id)->sum('harga');
 
         // Gallery filtered by user's most common booking category
         $topCategory = $bookings->groupBy('kategori')->sortByDesc->count()->keys()->first();
@@ -103,7 +109,7 @@ class UserDashboard extends Component
 
         // Whether user has an active (non-completed) booking
         $hasActiveBooking = Booking::where('user_id', $user->id)
-            ->whereNotIn('status', ['Lunas', 'Rejected', 'Selesai', 'Editing'])
+            ->whereNotIn('status', ['Editing', 'Rejected', 'Selesai'])
             ->exists();
 
         return view('livewire.user-dashboard', compact(

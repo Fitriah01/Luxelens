@@ -3,19 +3,17 @@
     payId: null,
     payTotal: 0,
     payPaid: 0,
-    payStatus: 'pending',
-    payLink: '',
+    payStatus: 'full_payment',
     rejectModal: false,
     rejectId: null,
     selesaiModal: false,
     selesaiId: null,
     selesaiLink: '',
-    openPay(id, total, paid, status, link) {
+    openPay(id, total, paid, status) {
         this.payId = id;
         this.payTotal = total;
         this.payPaid = paid || total;
-        this.payStatus = status || 'pending';
-        this.payLink = link || '';
+        this.payStatus = (status && status !== 'pending') ? status : 'full_payment';
         this.payModal = true;
     },
     openReject(id) {
@@ -113,6 +111,14 @@
             </thead>
             <tbody>
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $bookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $b): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                    <?php
+                        $hasResultLink = filled($b->link_results);
+                        $isDone = $b->status === 'Selesai' || $hasResultLink;
+                        $isEditingStage = in_array($b->status, ['Editing', 'Lunas'], true) && !$hasResultLink;
+                        $canValidatePayment =
+                            in_array($b->status, ['Pending', 'Pending Verification', 'Confirmed'], true) &&
+                            $b->proof_payment;
+                    ?>
                     <tr <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'booking-row-'.e($b->id).''; ?>wire:key="booking-row-<?php echo e($b->id); ?>"
                         style="border-bottom:1px solid rgba(255,255,255,.03);transition:background .2s;"
                         onmouseover="this.style.background='rgba(255,255,255,.02)'"
@@ -158,16 +164,16 @@
                         </td>
 
                         <td style="padding:14px 12px;">
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($b->status === 'Selesai'): ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isDone): ?>
                                 <span
                                     style="padding:4px 10px;border-radius:20px;background:rgba(46,204,113,.1);color:#2ecc71;border:1px solid rgba(46,204,113,.2);font-size:9px;font-weight:800;letter-spacing:.1em;">✓
-                                    SELESAI</span>
-                            <?php elseif($b->status === 'Lunas'): ?>
-                                <span
-                                    style="padding:4px 10px;border-radius:20px;background:rgba(46,204,113,.1);color:#2ecc71;border:1px solid rgba(46,204,113,.2);font-size:9px;font-weight:800;letter-spacing:.1em;">VERIFIED</span>
-                            <?php elseif($b->status === 'Editing'): ?>
+                                    DONE</span>
+                            <?php elseif($isEditingStage): ?>
                                 <span
                                     style="padding:4px 10px;border-radius:20px;background:rgba(52,152,219,.1);color:#3498db;border:1px solid rgba(52,152,219,.2);font-size:9px;font-weight:800;letter-spacing:.1em;">EDITING</span>
+                            <?php elseif($b->status === 'Pending Verification' || $b->status === 'Confirmed' || $b->status === 'Lunas'): ?>
+                                <span
+                                    style="padding:4px 10px;border-radius:20px;background:rgba(225,197,100,.1);color:#E1C564;border:1px solid rgba(225,197,100,.2);font-size:9px;font-weight:800;letter-spacing:.1em;">VERIFIED</span>
                             <?php elseif($b->status === 'Cancelled' || $b->status === 'Rejected'): ?>
                                 <span
                                     style="padding:4px 10px;border-radius:20px;background:rgba(255,68,68,.1);color:#ff4444;border:1px solid rgba(255,68,68,.2);font-size:9px;font-weight:800;letter-spacing:.1em;">REJECTED</span>
@@ -214,14 +220,43 @@
                                         style="padding:5px 10px;border-radius:8px;background:#128C7E;border:1px solid #128C7E;color:#fff;font-size:10px;font-weight:700;text-decoration:none;">WA</a>
                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($b->status !== 'Cancelled'): ?>
-                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($b->status !== 'Lunas'): ?>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($b->status, ['Cancelled', 'Rejected'], true)): ?>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isDone): ?>
+                                        <span
+                                            style="padding:5px 10px;border-radius:8px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.2);color:#2ecc71;font-size:10px;font-weight:700;">✓
+                                            DONE</span>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hasResultLink): ?>
+                                            <a href="<?php echo e($b->link_results); ?>" target="_blank"
+                                                style="padding:5px 10px;border-radius:8px;background:rgba(225,197,100,.12);border:1px solid rgba(225,197,100,.25);color:#E1C564;font-size:10px;font-weight:700;text-decoration:none;transition:all .2s;"
+                                                onmouseover="this.style.background='rgba(225,197,100,.22)'"
+                                                onmouseout="this.style.background='rgba(225,197,100,.12)'">VIEW LINK</a>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    <?php elseif($isEditingStage): ?>
+                                        <button type="button"
+                                            @click="openSelesai(<?php echo e($b->id); ?>, '<?php echo e($b->link_results ?? ''); ?>')"
+                                            style="padding:5px 10px;border-radius:8px;background:rgba(52,152,219,.12);border:1px solid rgba(52,152,219,.3);color:#3498db;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;"
+                                            onmouseover="this.style.background='rgba(52,152,219,.25)'"
+                                            onmouseout="this.style.background='rgba(52,152,219,.12)'">INPUT
+                                            GDRIVE</button>
+                                    <?php elseif($canValidatePayment): ?>
+                                        <button type="button"
+                                            @click="openPay(<?php echo e($b->id); ?>, <?php echo e($b->harga); ?>, <?php echo e($b->amount_paid ?? $b->harga); ?>, '<?php echo e($b->payment_status ?? 'full_payment'); ?>')"
+                                            style="padding:5px 10px;border-radius:8px;background:rgba(225,197,100,.12);border:1px solid rgba(225,197,100,.3);color:#E1C564;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;"
+                                            onmouseover="this.style.background='rgba(225,197,100,.25)'"
+                                            onmouseout="this.style.background='rgba(225,197,100,.12)'">VALIDASI
+                                            PEMBAYARAN</button>
+                                        <button type="button" @click="openReject(<?php echo e($b->id); ?>)"
+                                            style="padding:5px 10px;border-radius:8px;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.2);color:#ff4444;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;"
+                                            onmouseover="this.style.background='rgba(255,68,68,.25)'"
+                                            onmouseout="this.style.background='rgba(255,68,68,.1)'">TOLAK</button>
+                                    <?php else: ?>
                                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($b->proof_payment): ?>
                                             <button type="button"
-                                                @click="openPay(<?php echo e($b->id); ?>, <?php echo e($b->harga); ?>, <?php echo e($b->amount_paid ?? $b->harga); ?>, '<?php echo e($b->payment_status ?? 'pending'); ?>', '<?php echo e($b->link_results ?? ''); ?>')"
+                                                @click="openPay(<?php echo e($b->id); ?>, <?php echo e($b->harga); ?>, <?php echo e($b->amount_paid ?? $b->harga); ?>, '<?php echo e($b->payment_status ?? 'full_payment'); ?>')"
                                                 style="padding:5px 10px;border-radius:8px;background:rgba(225,197,100,.12);border:1px solid rgba(225,197,100,.3);color:#E1C564;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;"
                                                 onmouseover="this.style.background='rgba(225,197,100,.25)'"
-                                                onmouseout="this.style.background='rgba(225,197,100,.12)'">VALIDASI</button>
+                                                onmouseout="this.style.background='rgba(225,197,100,.12)'">VALIDASI
+                                                PEMBAYARAN</button>
                                         <?php else: ?>
                                             <span
                                                 style="padding:5px 10px;border-radius:8px;background:#0a0a0a;border:1px solid #1a1a1a;color:#333;font-size:10px;font-weight:700;">MENUNGGU</span>
@@ -230,25 +265,6 @@
                                             style="padding:5px 10px;border-radius:8px;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.2);color:#ff4444;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;"
                                             onmouseover="this.style.background='rgba(255,68,68,.25)'"
                                             onmouseout="this.style.background='rgba(255,68,68,.1)'">TOLAK</button>
-                                    <?php elseif($b->status === 'Lunas'): ?>
-                                        <a href="/admin/update-status/<?php echo e($b->id); ?>/Editing"
-                                            style="padding:5px 10px;border-radius:8px;background:rgba(52,152,219,.12);border:1px solid rgba(52,152,219,.3);color:#3498db;font-size:10px;font-weight:700;text-decoration:none;transition:all .2s;"
-                                            onmouseover="this.style.background='rgba(52,152,219,.25)'"
-                                            onmouseout="this.style.background='rgba(52,152,219,.12)'"
-                                            onclick="return confirm('Tandai sesi ini sebagai Editing?')">EDITING</a>
-                                    <?php elseif($b->status === 'Editing'): ?>
-                                        <button type="button"
-                                            @click="openSelesai(<?php echo e($b->id); ?>, '<?php echo e($b->link_results ?? ''); ?>')"
-                                            style="padding:5px 10px;border-radius:8px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.3);color:#2ecc71;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;"
-                                            onmouseover="this.style.background='rgba(46,204,113,.25)'"
-                                            onmouseout="this.style.background='rgba(46,204,113,.12)'">SELESAI</button>
-                                    <?php elseif($b->status === 'Selesai'): ?>
-                                        <span
-                                            style="padding:5px 10px;border-radius:8px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.2);color:#2ecc71;font-size:10px;font-weight:700;">✓
-                                            SELESAI</span>
-                                    <?php else: ?>
-                                        <span
-                                            style="padding:5px 10px;border-radius:8px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.2);color:#2ecc71;font-size:10px;font-weight:700;">VERIFIED</span>
                                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </div>
@@ -627,6 +643,224 @@
             animation: pmSpin .6s linear infinite;
             display: none;
         }
+
+        /* Result modal */
+        .rm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(0, 0, 0, .76);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .rm-card {
+            position: relative;
+            width: 520px;
+            max-width: min(96vw, 520px);
+            background: linear-gradient(180deg, rgba(12, 12, 12, .96), rgba(8, 8, 8, .98));
+            border: 1px solid rgba(225, 197, 100, .22);
+            border-radius: 24px;
+            padding: 34px 34px 28px;
+            box-shadow:
+                0 0 0 1px rgba(225, 197, 100, .04),
+                0 12px 40px rgba(0, 0, 0, .46),
+                0 28px 90px rgba(0, 0, 0, .72),
+                0 0 40px rgba(225, 197, 100, .08);
+            overflow: hidden;
+        }
+
+        .rm-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(225, 197, 100, .14), transparent 42%);
+            pointer-events: none;
+        }
+
+        .rm-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 12%;
+            right: 12%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(225, 197, 100, .65), transparent);
+        }
+
+        .rm-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(255, 255, 255, .03);
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .22s ease;
+        }
+
+        .rm-close:hover {
+            border-color: rgba(225, 197, 100, .28);
+            color: #E1C564;
+            background: rgba(225, 197, 100, .05);
+        }
+
+        .rm-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(225, 197, 100, .09);
+            border: 1px solid rgba(225, 197, 100, .18);
+            box-shadow: 0 0 22px rgba(225, 197, 100, .08);
+            flex-shrink: 0;
+        }
+
+        .rm-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: rgba(225, 197, 100, .58);
+            margin-bottom: 10px;
+        }
+
+        .rm-input-wrap {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .rm-input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            opacity: .42;
+        }
+
+        .rm-input {
+            width: 100%;
+            padding: 13px 16px 13px 40px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: #fff;
+            border-radius: 12px;
+            outline: none;
+            transition: border-color .22s, box-shadow .22s, background .22s;
+            box-sizing: border-box;
+        }
+
+        .rm-input:focus {
+            border-color: rgba(225, 197, 100, .4);
+            box-shadow: 0 0 0 3px rgba(225, 197, 100, .08);
+            background: rgba(255, 255, 255, .05);
+        }
+
+        .rm-input::placeholder {
+            color: rgba(255, 255, 255, .22);
+        }
+
+        .rm-note {
+            margin-bottom: 22px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .025);
+            border: 1px solid rgba(255, 255, 255, .05);
+            font-size: 10px;
+            color: #666;
+            line-height: 1.75;
+        }
+
+        .rm-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rm-save {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #D4AF37 0%, #E1C564 45%, #BFA15A 100%);
+            color: #050505;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .18em;
+            cursor: pointer;
+            transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease;
+            box-shadow: 0 6px 28px rgba(225, 197, 100, .22);
+        }
+
+        .rm-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 32px rgba(225, 197, 100, .28);
+        }
+
+        .rm-cancel {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(225, 197, 100, .16);
+            background: transparent;
+            color: rgba(225, 197, 100, .62);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .16em;
+            cursor: pointer;
+            transition: all .22s ease;
+        }
+
+        .rm-cancel:hover {
+            color: #E1C564;
+            border-color: rgba(225, 197, 100, .34);
+            background: rgba(225, 197, 100, .04);
+        }
+
+        .rm-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(5, 5, 5, .25);
+            border-top-color: #050505;
+            border-radius: 50%;
+            animation: pmSpin .6s linear infinite;
+            display: none;
+        }
+
+        @keyframes rmZoomIn {
+            from {
+                opacity: 0;
+                transform: scale(.94) translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .rm-card-anim {
+            animation: rmZoomIn .26s cubic-bezier(.34, 1.4, .64, 1) both;
+        }
     </style>
 
     <div x-show="payModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
@@ -652,8 +886,9 @@
                     <h3
                         style="font-family:'Playfair Display',serif;color:#E1C564;margin:0;font-size:19px;font-weight:700;line-height:1.2;">
                         Validasi Pembayaran</h3>
-                    <p style="margin:3px 0 0;font-size:10px;color:#444;letter-spacing:.04em;">Konfirmasi & atur status
-                        sesi foto klien</p>
+                    <p style="margin:3px 0 0;font-size:10px;color:#444;letter-spacing:.04em;">Konfirmasi pembayaran
+                        lalu
+                        lanjutkan booking ke tahap Editing</p>
                 </div>
                 
                 <button type="button" @click="payModal = false"
@@ -706,20 +941,6 @@
                 <div class="pm-pay-cards" x-data="{ chosen: payStatus }">
 
                     
-                    <div class="pm-pay-card" :class="chosen === 'pending' ? 'active' : ''"
-                        @click="chosen = 'pending'; document.getElementById('pmHiddenStatus').value = 'pending'">
-                        <div class="pm-check">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#E1C564"
-                                stroke-width="3">
-                                <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                        </div>
-                        <div class="pm-pay-card-dot"></div>
-                        <div class="pm-pay-card-title">Pending</div>
-                        <div class="pm-pay-card-sub">Belum lunas</div>
-                    </div>
-
-                    
                     <div class="pm-pay-card" :class="chosen === 'down_payment' ? 'active' : ''"
                         @click="chosen = 'down_payment'; document.getElementById('pmHiddenStatus').value = 'down_payment'">
                         <div class="pm-check">
@@ -755,25 +976,15 @@
                     <span
                         style="font-size:8px;opacity:.5;font-weight:400;letter-spacing:0;text-transform:none;">(opsional)</span>
                 </label>
-                <textarea name="admin_feedback" rows="3" placeholder="Tambahkan pesan atau instruksi untuk klien…"
-                    class="pm-field" style="margin-bottom:14px;"></textarea>
+                <textarea name="admin_feedback" rows="3" placeholder="Tambahkan pesan singkat untuk klien…" class="pm-field"
+                    style="margin-bottom:14px;"></textarea>
 
-                
-                <label class="pm-label" style="margin-bottom:8px;">Link Hasil Foto
-                    <span
-                        style="font-size:8px;opacity:.5;font-weight:400;letter-spacing:0;text-transform:none;">(opsional)</span>
-                </label>
-                <div style="position:relative;margin-bottom:26px;">
-                    <span
-                        style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.35;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E1C564"
-                            stroke-width="2">
-                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                        </svg>
-                    </span>
-                    <input type="url" name="link_results" :value="payLink"
-                        placeholder="https://drive.google.com/…" class="pm-field" style="padding-left:36px;">
+                <div
+                    style="margin-bottom:24px;padding:12px 14px;border-radius:12px;background:rgba(52,152,219,.08);border:1px solid rgba(52,152,219,.18);font-size:10px;color:#7fb6df;line-height:1.7;">
+                    Setelah pembayaran disimpan, booking akan otomatis masuk ke tahap <strong
+                        style="color:#fff;">Editing</strong>.
+                    Link Google Drive diinput pada tahap berikutnya melalui tombol <strong style="color:#fff;">Input
+                        GDrive</strong>.
                 </div>
 
                 
@@ -784,7 +995,7 @@
                             stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        SIMPAN VALIDASI
+                        SIMPAN & LANJUT EDITING
                     </span>
                 </button>
                 <button type="button" @click="payModal = false" class="pm-btn-cancel">BATAL</button>
@@ -796,29 +1007,87 @@
     
     <div x-show="selesaiModal" x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-        style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);justify-content:center;align-items:center;"
-        :style="selesaiModal ? 'display:flex' : 'display:none'">
-        <div
-            style="background:#0f0f0f;border:1px solid rgba(46,204,113,.2);border-radius:20px;padding:36px;width:440px;max-width:95vw;">
-            <h3 style="font-family:'Playfair Display',serif;color:#2ecc71;margin:0 0 6px;font-size:20px;">Tandai
-                Selesai</h3>
-            <p style="font-size:11px;color:#555;margin:0 0 24px;">Masukkan link hasil foto untuk klien (opsional), lalu
-                konfirmasi sesi selesai.</p>
-            <form :action="'/admin/bookings/' + selesaiId + '/mark-done'" method="POST">
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0" class="rm-overlay" style="display:none;"
+        :style="selesaiModal ? '' : 'display:none !important'" @click.self="selesaiModal = false"
+        @keydown.escape.window="selesaiModal = false">
+        <div class="rm-card rm-card-anim" x-show="selesaiModal" x-transition:enter="transition ease-out duration-280"
+            x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+            x-transition:enter-end="opacity-100 scale-100 translate-y-0" @click.stop>
+            <button type="button" class="rm-close" @click="selesaiModal = false"
+                aria-label="Tutup modal hasil foto">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.4">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+
+            <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;">
+                <div class="rm-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E1C564"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                </div>
+                <div style="padding-right:26px;">
+                    <h3
+                        style="font-family:'Playfair Display',serif;color:#E1C564;margin:0 0 6px;font-size:22px;line-height:1.2;">
+                        Update Hasil Foto</h3>
+                    <p style="font-size:11px;color:#5f5f5f;margin:0;line-height:1.8;">Masukkan link Google Drive final
+                        untuk klien. Setelah disimpan, booking otomatis masuk tahap Done dan link tidak dapat diubah
+                        lagi.</p>
+                </div>
+            </div>
+
+            <div style="margin:0 0 22px;">
+                <span
+                    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:rgba(225,197,100,.08);border:1px solid rgba(225,197,100,.18);font-size:10px;font-weight:700;color:rgba(225,197,100,.78);letter-spacing:.1em;">
+                    BOOKING ID #<span x-text="selesaiId"></span>
+                </span>
+            </div>
+
+            <form :action="'/admin/bookings/' + selesaiId + '/mark-done'" method="POST"
+                @submit="selesaiModal = false"
+                onsubmit="
+                    this.querySelector('[data-result-save-text]').style.display='none';
+                    this.querySelector('[data-result-save-spinner]').style.display='inline-block';
+                    this.querySelector('[data-result-save-button]').style.pointerEvents='none';
+                    this.querySelector('[data-result-save-button]').style.opacity='.82';
+                ">
                 <?php echo csrf_field(); ?>
-                <label
-                    style="font-size:10px;letter-spacing:.12em;color:#555;text-transform:uppercase;display:block;margin-bottom:6px;">Link
-                    Google Drive / Hasil Foto</label>
-                <input type="url" name="link_results" :value="selesaiLink"
-                    placeholder="https://drive.google.com/..."
-                    style="width:100%;padding:11px 14px;margin-bottom:20px;font-size:13px;background:#0a0a0a;border:1px solid #1e1e1e;color:#fff;border-radius:10px;outline:none;"
-                    onfocus="this.style.borderColor='rgba(46,204,113,.4)'" onblur="this.style.borderColor='#1e1e1e'">
-                <button type="submit"
-                    style="width:100%;padding:13px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;font-size:11px;font-weight:800;letter-spacing:.15em;cursor:pointer;border-radius:10px;transition:all .2s;"
-                    onmouseover="this.style.background='rgba(46,204,113,.28)'"
-                    onmouseout="this.style.background='rgba(46,204,113,.15)'">✓ KONFIRMASI SELESAI</button>
-                <button type="button" @click="selesaiModal = false"
-                    style="width:100%;padding:10px;margin-top:8px;background:none;border:none;color:#444;font-size:11px;cursor:pointer;">BATAL</button>
+
+                <label class="rm-label">Link Google Drive / Hasil Foto</label>
+                <div class="rm-input-wrap">
+                    <span class="rm-input-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E1C564"
+                            stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                    </span>
+                    <input type="url" name="link_results" :value="selesaiLink"
+                        placeholder="https://drive.google.com/..." class="rm-input" required>
+                </div>
+
+                <div class="rm-note">
+                    Demi keamanan data, link hasil foto hanya dapat disimpan satu kali pada tahap ini.
+                </div>
+
+                <div class="rm-actions">
+                    <button type="submit" class="rm-save" data-result-save-button>
+                        <span class="rm-spinner" data-result-save-spinner></span>
+                        <span data-result-save-text style="display:inline-flex;align-items:center;gap:7px;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.4">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            SIMPAN LINK & DONE
+                        </span>
+                    </button>
+                    <button type="button" class="rm-cancel" @click="selesaiModal = false">BATAL</button>
+                </div>
             </form>
         </div>
     </div>

@@ -232,7 +232,8 @@
                 <div style="display:flex;flex-direction:column;gap:6px;">
                     <div style="display:flex;align-items:center;gap:8px;">
                         <div style="width:6px;height:6px;border-radius:50%;background:#2ecc71;flex-shrink:0;"></div>
-                        <span style="font-size:10px;color:#888;">{{ $bookings->where('status', 'Lunas')->count() }}
+                        <span
+                            style="font-size:10px;color:#888;">{{ $bookings->whereIn('status', ['Editing', 'Selesai', 'Lunas'])->count() }}
                             Selesai</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
@@ -338,8 +339,17 @@
                                 'sub' => 'Hasil editing selesai & link unduhan tersedia',
                             ],
                         ];
-                        $tlCurrent = ['Pending' => 0, 'Confirmed' => 1, 'Lunas' => 2][$latest->status] ?? 0;
-                        if ($latest->status === 'Lunas' && $latest->link_results) {
+                        $tlCurrent =
+                            [
+                                'Pending' => 0,
+                                'Pending Verification' => 1,
+                                'Confirmed' => 1,
+                                'Lunas' => 2,
+                                'Editing' => 3,
+                                'Selesai' => 4,
+                                'Completed' => 4,
+                            ][$latest->status] ?? 0;
+                        if (in_array($latest->status, ['Editing', 'Lunas'], true) && $latest->link_results) {
                             $tlCurrent = 4;
                         } elseif (in_array($latest->status, ['Completed', 'Selesai'])) {
                             $tlCurrent = 4;
@@ -1066,8 +1076,7 @@
                                 <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;transition:box-shadow .3s;"
                                     onmouseover="this.querySelector('img').style.transform='scale(1.12)';this.style.boxShadow='0 0 12px rgba(225,197,100,.15)'"
                                     onmouseout="this.querySelector('img').style.transform='scale(1)';this.style.boxShadow='none'">
-                                    <img src="{{ asset('storage/portfolio/' . $g->filename) }}"
-                                        alt="{{ $g->kategori }}"
+                                    <img src="{{ $g->image_url }}" alt="{{ $g->kategori }}"
                                         style="width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease;">
                                 </div>
                             @endforeach

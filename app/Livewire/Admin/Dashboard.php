@@ -99,14 +99,22 @@ class Dashboard extends Component
         $this->p_work_days      = [];
     }
 
+    private function fullyPaidBookingsQuery()
+    {
+        return Booking::query()->where(function ($query) {
+            $query->where('payment_status', 'full_payment')
+                ->orWhereIn('status', ['Lunas', 'Editing', 'Selesai']);
+        });
+    }
+
     public function render()
     {
-        $totalIncome   = Booking::where('status', 'Lunas')->sum('harga');
+        $totalIncome   = $this->fullyPaidBookingsQuery()->sum('harga');
         $totalBookings = Booking::count();
-        $pendingCount  = Booking::whereNotIn('status', ['Lunas', 'Cancelled'])->count();
+        $pendingCount  = Booking::whereNotIn('status', ['Editing', 'Selesai', 'Cancelled', 'Rejected'])->count();
         $reviewCount   = Testimonial::count();
 
-        $grafikBulanan = Booking::where('status', 'Lunas')
+        $grafikBulanan = $this->fullyPaidBookingsQuery()
             ->selectRaw('MONTHNAME(created_at) as bulan, SUM(harga) as total, MONTH(created_at) as bulan_angka')
             ->groupBy('bulan', 'bulan_angka')
             ->orderBy('bulan_angka')

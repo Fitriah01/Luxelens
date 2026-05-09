@@ -627,6 +627,8 @@
                 display: none;
             }
         }
+
+        @include('partials.portfolio-shared-styles')
     </style>
 </head>
 
@@ -644,10 +646,11 @@
     </header>
 
     {{-- ── HERO ── --}}
-    <section class="gl-hero">
-        <p class="gl-hero-eyebrow">Visual Portfolio</p>
-        <h1 class="gl-hero-title">Our <em>Creative</em><br>Work</h1>
-        <p class="gl-hero-sub">Setiap frame adalah cerita. Jelajahi koleksi film dan foto kami.</p>
+    <section class="gl-hero portfolio-hero">
+        <p class="gl-hero-eyebrow portfolio-eyebrow">Visual Portfolio</p>
+        <h1 class="gl-hero-title portfolio-title">Our <em>Creative</em><br>Work</h1>
+        <p class="gl-hero-sub portfolio-subtitle">Setiap frame adalah cerita. Jelajahi koleksi film dan foto kami dengan
+            tata letak yang lebih bersih, sinematik, dan konsisten di setiap kategori.</p>
     </section>
 
     {{-- ════════════════════════════════ --}}
@@ -663,57 +666,63 @@
         <div class="gl-section-divider-line"></div>
     </div>
 
-    <div class="gl-video-wrap">
-        <div class="gl-video-grid">
+    <div class="gl-video-wrap portfolio-shell">
+        <div class="portfolio-section-head">
+            <p class="portfolio-section-kicker">Signature Motion</p>
+            <h2 class="portfolio-section-title">Curated <em>Portfolio Films</em></h2>
+            <p class="portfolio-section-copy">Seluruh video kini ditampilkan dalam grid universal yang simetris agar
+                tiap kategori terasa konsisten dan lebih premium.</p>
+        </div>
+
+        <div class="gl-video-grid portfolio-video-grid">
+
+            @php
+                $galleryVideos = [
+                    ['id' => 'glvid-1', 'label' => 'Cinematic Reel', 'src' => asset('videos/video.mp4')],
+                    ['id' => 'glvid-2', 'label' => 'Wedding Film', 'src' => asset('videos/video.mp4')],
+                    ['id' => 'glvid-3', 'label' => 'Prewed Story', 'src' => asset('videos/video.mp4')],
+                ];
+            @endphp
 
             {{-- Feature video (tall left) --}}
-            <div class="gl-vid-item" id="glvid-1">
-                <video src="{{ asset('videos/video.mp4') }}" preload="metadata" playsinline loop></video>
-                <div class="gl-vid-click" onclick="glToggleVid('glvid-1')"></div>
-                <div class="gl-play-btn">
-                    <div class="gl-play-ring">
-                        <div class="gl-play-ring-outer"></div>
-                        <div class="gl-play-ring-inner">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#BFA15A">
-                                <path d="M8 5.14v14l11-7-11-7z" />
-                            </svg>
-                        </div>
+            <div class="gl-vid-item portfolio-video-card" id="glvid-1" data-video-index="0">
+                <video src="{{ $galleryVideos[0]['src'] }}" preload="metadata" playsinline loop muted></video>
+                <div class="gl-vid-click" onclick="glOpenVideoLb(0)"></div>
+                <div class="gl-play-btn portfolio-video-overlay">
+                    <div class="portfolio-play-button">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#BFA15A">
+                            <path d="M8 5.14v14l11-7-11-7z" />
+                        </svg>
                     </div>
                 </div>
-                <span class="gl-vid-label">Cinematic Reel</span>
+                <span class="gl-vid-label portfolio-video-label">{{ $galleryVideos[0]['label'] }}</span>
             </div>
 
             {{-- Two stacked videos right --}}
-            <div class="gl-vid-item" id="glvid-2">
-                <video src="{{ asset('videos/video.mp4') }}" preload="metadata" playsinline loop></video>
-                <div class="gl-vid-click" onclick="glToggleVid('glvid-2')"></div>
-                <div class="gl-play-btn">
-                    <div class="gl-play-ring">
-                        <div class="gl-play-ring-outer"></div>
-                        <div class="gl-play-ring-inner">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA15A">
-                                <path d="M8 5.14v14l11-7-11-7z" />
-                            </svg>
-                        </div>
+            <div class="gl-vid-item portfolio-video-card" id="glvid-2" data-video-index="1">
+                <video src="{{ $galleryVideos[1]['src'] }}" preload="metadata" playsinline loop muted></video>
+                <div class="gl-vid-click" onclick="glOpenVideoLb(1)"></div>
+                <div class="gl-play-btn portfolio-video-overlay">
+                    <div class="portfolio-play-button">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA15A">
+                            <path d="M8 5.14v14l11-7-11-7z" />
+                        </svg>
                     </div>
                 </div>
-                <span class="gl-vid-label">Wedding Film</span>
+                <span class="gl-vid-label portfolio-video-label">{{ $galleryVideos[1]['label'] }}</span>
             </div>
 
-            <div class="gl-vid-item" id="glvid-3">
-                <video src="{{ asset('videos/video.mp4') }}" preload="metadata" playsinline loop></video>
-                <div class="gl-vid-click" onclick="glToggleVid('glvid-3')"></div>
-                <div class="gl-play-btn">
-                    <div class="gl-play-ring">
-                        <div class="gl-play-ring-outer"></div>
-                        <div class="gl-play-ring-inner">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA15A">
-                                <path d="M8 5.14v14l11-7-11-7z" />
-                            </svg>
-                        </div>
+            <div class="gl-vid-item portfolio-video-card" id="glvid-3" data-video-index="2">
+                <video src="{{ $galleryVideos[2]['src'] }}" preload="metadata" playsinline loop muted></video>
+                <div class="gl-vid-click" onclick="glOpenVideoLb(2)"></div>
+                <div class="gl-play-btn portfolio-video-overlay">
+                    <div class="portfolio-play-button">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA15A">
+                            <path d="M8 5.14v14l11-7-11-7z" />
+                        </svg>
                     </div>
                 </div>
-                <span class="gl-vid-label">Prewed Story</span>
+                <span class="gl-vid-label portfolio-video-label">{{ $galleryVideos[2]['label'] }}</span>
             </div>
 
         </div>
@@ -732,7 +741,13 @@
         <div class="gl-section-divider-line"></div>
     </div>
 
-    <div class="gl-photo-wrap">
+    <div class="gl-photo-wrap portfolio-shell">
+        <div class="portfolio-section-head">
+            <p class="portfolio-section-kicker">Photography Archive</p>
+            <h2 class="portfolio-section-title">Luxury <em>Story Collections</em></h2>
+            <p class="portfolio-section-copy">Wedding, Graduation, Pre-Wedding, dan Family kini berada dalam satu bahasa
+                visual yang lebih rapi dan berkelas.</p>
+        </div>
 
         {{-- Filter Tabs --}}
         <div class="gl-filter-row">
@@ -755,7 +770,7 @@
                 $catCover = [];
                 foreach ($photos as $p) {
                     if (!isset($catCover[$p->kategori])) {
-                        $catCover[$p->kategori] = $p->filename;
+                        $catCover[$p->kategori] = $p->image_url;
                     }
                 }
             @endphp
@@ -763,7 +778,7 @@
             @foreach ($categories as $catKey => $catLabel)
                 <a href="/portfolio/{{ $catKey }}" class="gl-cat-card">
                     @if (isset($catCover[$catKey]))
-                        <img src="{{ asset('storage/portfolio/' . $catCover[$catKey]) }}" alt="{{ $catLabel }}">
+                        <img src="{{ $catCover[$catKey] }}" alt="{{ $catLabel }}">
                     @else
                         <div style="width:100%;height:100%;background:#111;"></div>
                     @endif
@@ -786,9 +801,8 @@
         <div class="gl-masonry" id="gl-masonry-view" style="display:none;">
             @foreach ($photos as $p)
                 <div class="gl-photo-item" data-category="{{ $p->kategori }}"
-                    onclick="glOpenLb('{{ asset('storage/portfolio/' . $p->filename) }}', {{ $loop->index }})">
-                    <img src="{{ asset('storage/portfolio/' . $p->filename) }}" alt="{{ $p->kategori }}"
-                        loading="lazy">
+                    onclick="glOpenLb('{{ $p->image_url }}', {{ $loop->index }})">
+                    <img src="{{ $p->image_url }}" alt="{{ $p->kategori }}" loading="lazy">
                     <div class="gl-photo-overlay">
                         <div class="gl-photo-cat">{{ $p->kategori }}</div>
                         <div class="gl-photo-title">{{ $p->judul ?? 'Ethereal Moment' }}</div>
@@ -812,25 +826,163 @@
         <div class="gl-lb-counter" id="gl-lb-counter"></div>
     </div>
 
+    <div id="gl-video-lightbox" class="portfolio-video-lightbox">
+        <div class="portfolio-video-stage">
+            <button class="portfolio-video-modal-close" type="button" onclick="glCloseVideoLb()"
+                aria-label="Close video viewer">✕</button>
+            <button class="portfolio-video-modal-nav portfolio-video-modal-prev" type="button"
+                onclick="glVideoNav(-1)" aria-label="Previous video">‹</button>
+            <div class="portfolio-video-frame">
+                <div id="gl-video-overlay" class="portfolio-video-cinematic-overlay">
+                    <div class="portfolio-video-title-wrap">
+                        <span class="portfolio-video-kicker">LuxeLens Cinema</span>
+                        <h3 id="gl-video-title" class="portfolio-video-title">Portfolio Film</h3>
+                    </div>
+                    <div class="portfolio-video-actions">
+                        <button id="gl-video-fullscreen" class="portfolio-video-fullscreen" type="button"
+                            aria-label="Toggle native fullscreen" onclick="glToggleVideoFullscreen()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                                <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+                                <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
+                                <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                            </svg>
+                            <span class="portfolio-video-fullscreen-label">Fullscreen</span>
+                        </button>
+                    </div>
+                </div>
+                <video id="gl-video-player" class="portfolio-video-player" controls playsinline
+                    preload="auto"></video>
+            </div>
+            <button class="portfolio-video-modal-nav portfolio-video-modal-next" type="button"
+                onclick="glVideoNav(1)" aria-label="Next video">›</button>
+            <div class="portfolio-video-caption">
+                <strong id="gl-video-caption">Portfolio Film</strong>
+                <span class="portfolio-video-counter" id="gl-video-counter">01 / 03</span>
+            </div>
+        </div>
+    </div>
+
     <script>
-        /* ── VIDEO ── */
-        function glToggleVid(id) {
-            const wrap = document.getElementById(id);
-            const vid = wrap.querySelector('video');
-            if (vid.paused) {
-                document.querySelectorAll('.gl-vid-item video').forEach(v => {
-                    if (v !== vid) {
-                        v.pause();
-                        v.closest('.gl-vid-item').classList.remove('playing');
-                    }
-                });
-                vid.play();
-                wrap.classList.add('playing');
-            } else {
-                vid.pause();
-                wrap.classList.remove('playing');
+        /* ── VIDEO LIGHTBOX ── */
+        const glVideoItems = @json($galleryVideos);
+        const glVideoLightbox = document.getElementById('gl-video-lightbox');
+        const glVideoPlayer = document.getElementById('gl-video-player');
+        const glVideoCaption = document.getElementById('gl-video-caption');
+        const glVideoCounter = document.getElementById('gl-video-counter');
+        const glVideoTitle = document.getElementById('gl-video-title');
+        const glVideoOverlay = document.getElementById('gl-video-overlay');
+        const glVideoFrame = glVideoPlayer?.closest('.portfolio-video-frame');
+        let glVideoCurrent = 0;
+        let glVideoOverlayTimer = null;
+
+        function glShowVideoOverlay(autoHide = true) {
+            if (!glVideoOverlay) return;
+            glVideoOverlay.classList.remove('is-hidden');
+            if (glVideoOverlayTimer) clearTimeout(glVideoOverlayTimer);
+            if (autoHide) {
+                glVideoOverlayTimer = setTimeout(() => {
+                    glVideoOverlay.classList.add('is-hidden');
+                }, 3000);
             }
         }
+
+        function glGetFullscreenElement() {
+            return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+        }
+
+        function glRequestFullscreen(element) {
+            if (element.requestFullscreen) return element.requestFullscreen();
+            if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
+            if (element.msRequestFullscreen) return element.msRequestFullscreen();
+        }
+
+        function glExitFullscreen() {
+            if (document.exitFullscreen) return document.exitFullscreen();
+            if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+            if (document.msExitFullscreen) return document.msExitFullscreen();
+        }
+
+        function glToggleVideoFullscreen() {
+            if (!glVideoFrame) return;
+            if (glGetFullscreenElement()) {
+                glExitFullscreen();
+                return;
+            }
+            glRequestFullscreen(glVideoFrame);
+        }
+
+        function glSyncVideoCardState() {
+            document.querySelectorAll('.portfolio-video-card').forEach((card, index) => {
+                card.classList.toggle('playing', index === glVideoCurrent && glVideoLightbox.classList.contains(
+                    'open'));
+            });
+        }
+
+        function glRenderVideoLb() {
+            const current = glVideoItems[glVideoCurrent];
+            if (!current) return;
+
+            glVideoPlayer.classList.add('is-switching');
+            glVideoPlayer.src = current.src;
+            glVideoPlayer.load();
+            glVideoPlayer.currentTime = 0;
+            const playAttempt = glVideoPlayer.play();
+            if (playAttempt && typeof playAttempt.catch === 'function') {
+                playAttempt.catch(() => {
+                    glVideoPlayer.muted = true;
+                    glVideoPlayer.play().catch(() => {});
+                });
+            }
+
+            glVideoCaption.textContent = current.label;
+            glVideoTitle.textContent = current.label;
+            glVideoCounter.textContent = String(glVideoCurrent + 1).padStart(2, '0') + ' / ' + String(glVideoItems.length)
+                .padStart(2, '0');
+            glSyncVideoCardState();
+            glShowVideoOverlay(true);
+        }
+
+        function glOpenVideoLb(index) {
+            glVideoCurrent = index;
+            glVideoLightbox.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            glRenderVideoLb();
+        }
+
+        function glCloseVideoLb() {
+            if (glVideoOverlayTimer) clearTimeout(glVideoOverlayTimer);
+            glVideoPlayer.pause();
+            glVideoPlayer.removeAttribute('src');
+            glVideoPlayer.load();
+            glVideoLightbox.classList.remove('open');
+            document.body.style.overflow = '';
+            document.querySelectorAll('.portfolio-video-card').forEach(card => card.classList.remove('playing'));
+        }
+
+        function glVideoNav(dir) {
+            glVideoCurrent = (glVideoCurrent + dir + glVideoItems.length) % glVideoItems.length;
+            glRenderVideoLb();
+        }
+
+        glVideoLightbox?.addEventListener('click', event => {
+            if (event.target === glVideoLightbox) glCloseVideoLb();
+        });
+
+        glVideoPlayer?.addEventListener('playing', () => {
+            glVideoPlayer.classList.remove('is-switching');
+            glShowVideoOverlay(true);
+        });
+        glVideoPlayer?.addEventListener('pause', () => glShowVideoOverlay(false));
+        glVideoPlayer?.addEventListener('mousemove', () => glShowVideoOverlay(!glVideoPlayer.paused));
+        glVideoPlayer?.addEventListener('click', () => glShowVideoOverlay(!glVideoPlayer.paused));
+        glVideoPlayer?.addEventListener('dblclick', () => glToggleVideoFullscreen());
+        glVideoFrame?.addEventListener('mousemove', () => glShowVideoOverlay(!glVideoPlayer.paused));
+
+        ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(eventName => {
+            document.addEventListener(eventName, () => glShowVideoOverlay(!glVideoPlayer.paused));
+        });
 
         /* ── FILTER ── */
         let glCurrentFilter = 'all';
@@ -870,7 +1022,7 @@
         const glAllPhotos = [
             @foreach ($photos as $p)
                 {
-                    src: "{{ asset('storage/portfolio/' . $p->filename) }}",
+                    src: "{{ $p->image_url }}",
                     cat: "{{ $p->kategori }}"
                 },
             @endforeach
@@ -919,6 +1071,13 @@
         });
 
         document.addEventListener('keydown', e => {
+            if (glVideoLightbox.classList.contains('open')) {
+                if (e.key === 'Escape') glCloseVideoLb();
+                if (e.key === 'ArrowLeft') glVideoNav(-1);
+                if (e.key === 'ArrowRight') glVideoNav(1);
+                return;
+            }
+
             if (!document.getElementById('gl-lightbox').classList.contains('open')) return;
             if (e.key === 'Escape') glCloseLb();
             if (e.key === 'ArrowLeft') glLbNav(-1);
@@ -1112,7 +1271,7 @@
         <div class="gallery-grid" id="galleryGrid">
             @foreach ($photos as $p)
                 <div class="gallery-item" data-category="{{ $p->kategori }}">
-                    <img src="{{ asset('storage/portfolio/' . $p->filename) }}" alt="Gallery LUXELENS">
+                    <img src="{{ $p->image_url }}" alt="Gallery LUXELENS">
                     <div class="overlay">
                         <p>{{ $p->kategori }}</p>
                         <h3>{{ $p->judul ?? 'Ethereal Moments' }}</h3>

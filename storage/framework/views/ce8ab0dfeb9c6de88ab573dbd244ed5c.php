@@ -1235,7 +1235,7 @@
         </script>
     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-    <section class="py-40 px-10 md:px-20 max-w-[1500px] mx-auto reveal" id="services">
+    <section class="py-40 px-10 md:px-20 max-w-1500px mx-auto reveal" id="services">
         <div class="grid grid-cols-1 md:grid-cols-2 justify-between items-end mb-24 gap-12">
             <div class="max-w-2xl">
                 <h6 class="text-[#E1C564] text-[10px] uppercase tracking-[0.5em] mb-6">Cerita Dalam Gambar</h6>
@@ -1683,7 +1683,7 @@
                     class="absolute -top-12 -left-12 w-48 h-48 border-l border-t border-[#E1C564]/10 transition-all duration-700 group-hover:-top-8 group-hover:-left-8">
                 </div>
                 <img src="<?php echo e(asset('images/foto1.jpeg')); ?>" alt="About"
-                    class="w-full h-[700px] object-cover grayscale hover:grayscale-0 transition-all duration-1000 shadow-[0_35px_100px_rgba(0,0,0,0.8)]">
+                    class="w-full h-700px object-cover grayscale hover:grayscale-0 transition-all duration-1000 shadow-[0_35px_100px_rgba(0,0,0,0.8)]">
                 <div
                     class="absolute bottom-8 -right-8 bg-[#E1C564] p-10 text-black hidden md:block group-hover:rotate-3 transition duration-500 shadow-2xl">
                     <p class="playfair text-4xl font-black">5+</p>

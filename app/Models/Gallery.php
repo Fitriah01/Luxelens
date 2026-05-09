@@ -9,10 +9,16 @@ class Gallery extends Model
 {
     use HasFactory;
 
-    // Tambahkan baris ini
     protected $fillable = [
         'filename',
         'kategori',
         'judul'
     ];
+
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute(): string
+    {
+        return asset('storage/portfolio/' . rawurlencode($this->filename));
+    }
 }

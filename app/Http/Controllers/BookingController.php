@@ -18,11 +18,36 @@ use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
+    private function paidBookingStatuses(): array
+    {
+        return ['Lunas', 'Editing', 'Selesai'];
+    }
+
+    private function applyPaidBookingsScope($query)
+    {
+        return $query->where(function ($paidQuery) {
+            $paidQuery->where('payment_status', 'full_payment')
+                ->orWhereIn('status', $this->paidBookingStatuses());
+        });
+    }
+
+    private function sanitizeGalleryFilename($file): string
+    {
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $extension = strtolower($file->getClientOriginalExtension());
+        $safeName = Str::slug($originalName);
+
+        if ($safeName === '') {
+            $safeName = 'gallery-image';
+        }
+
+        return time() . '_' . Str::limit($safeName, 80, '') . '.' . $extension;
+    }
+
     private function resolveBookingStatusFromPayment(Booking $booking, string $paymentStatus): string
     {
         return match ($paymentStatus) {
-            'full_payment' => 'Lunas',
-            'down_payment' => 'Confirmed',
+            'full_payment', 'down_payment' => 'Editing',
             default => $booking->proof_payment ? 'Pending Verification' : 'Pending',
         };
     }
@@ -68,7 +93,7 @@ class BookingController extends Controller
             // Ambil data fotografer dari tabel photographers untuk konsistensi jadwal
             $allPhotogs = Photographer::all();
 
-            $grafikBulanan = Booking::where('status', 'Lunas')
+            $grafikBulanan = $this->applyPaidBookingsScope(Booking::query())
                 ->selectRaw('MONTHNAME(created_at) as bulan, SUM(harga) as total, MONTH(created_at) as bulan_angka')
                 ->groupBy('bulan', 'bulan_angka')
                 ->orderBy('bulan_angka', 'ASC')
@@ -78,7 +103,7 @@ class BookingController extends Controller
                 ->groupBy('kategori')
                 ->pluck('total', 'kategori');
 
-            $totalIncome = Booking::where('status', 'Lunas')->sum('harga');
+            $totalIncome = $this->applyPaidBookingsScope(Booking::query())->sum('harga');
             $photographers = Photographer::all();
             $adminTestimonials = Testimonial::latest()->paginate(5, ['*'], 'tpage')->withQueryString();
 
@@ -203,7 +228,7 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
         $booking->update([
-            'status' => 'Lunas',
+            'status' => 'Editing',
             'payment_status' => 'full_payment',
             'amount_paid' => $booking->harga,
         ]);
@@ -224,6 +249,7 @@ class BookingController extends Controller
         $payload = ['status' => $newStatus];
 
         if ($newStatus === 'Lunas') {
+            $payload['status'] = 'Editing';
             $payload['payment_status'] = 'full_payment';
             $payload['amount_paid'] = $booking->harga;
         }
@@ -243,14 +269,21 @@ class BookingController extends Controller
     public function markDone(Request $request, int $id)
     {
         $request->validate([
-            'link_results' => 'nullable|url|max:255',
+            'link_results' => 'required|url|max:255',
         ]);
 
         $booking = Booking::findOrFail($id);
-        $booking->status = 'Selesai';
-        if ($request->filled('link_results')) {
-            $booking->link_results = $request->link_results;
+
+        if (! in_array($booking->status, ['Editing', 'Lunas'], true)) {
+            return redirect()->back()->with('error', 'Link hasil foto hanya bisa diinput setelah booking masuk tahap Editing.');
         }
+
+        if (! empty($booking->link_results)) {
+            return redirect()->back()->with('error', 'Link hasil foto sudah pernah disimpan dan tidak dapat diubah lagi.');
+        }
+
+        $booking->status = 'Selesai';
+        $booking->link_results = $request->link_results;
         $booking->save();
 
         return redirect()->back()->with('success', 'Booking #' . $booking->booking_code . ' ditandai Selesai.');
@@ -294,7 +327,7 @@ class BookingController extends Controller
 
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
-            $namaFile = time() . '_' . $file->getClientOriginalName();
+            $namaFile = $this->sanitizeGalleryFilename($file);
             $file->storeAs('portfolio', $namaFile, 'public');
 
             Gallery::create([
@@ -338,7 +371,7 @@ class BookingController extends Controller
             }
 
             $file = $request->file('foto');
-            $namaFile = time() . '_' . $file->getClientOriginalName();
+            $namaFile = $this->sanitizeGalleryFilename($file);
             $file->storeAs('portfolio', $namaFile, 'public');
 
             $foto->update([
@@ -475,8 +508,8 @@ class BookingController extends Controller
             $title = 'Laporan Tahunan';
         }
 
-        $bookings = $query->get();
-        $totalPendapatan = $query->where('status', 'Lunas')->sum('harga');
+        $bookings = (clone $query)->get();
+        $totalPendapatan = $this->applyPaidBookingsScope(clone $query)->sum('harga');
 
         return view('admin.laporan', compact('bookings', 'totalPendapatan', 'title'));
     }
@@ -502,8 +535,8 @@ class BookingController extends Controller
             $label = "Semua Data";
         }
 
-        $bookings = $query->get();
-        $total = $query->where('status', 'Lunas')->sum('harga');
+        $bookings = (clone $query)->get();
+        $total = $this->applyPaidBookingsScope(clone $query)->sum('harga');
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf-laporan', compact('bookings', 'total', 'label'));
         return $pdf->download('Laporan-Booking-' . $label . '.pdf');
@@ -513,21 +546,21 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($id);
 
         $request->validate([
-            'status' => 'nullable|string|in:Pending,Lunas,Rejected',
+            'status' => 'nullable|string|in:Pending,Lunas,Editing,Selesai,Rejected',
             'link_results' => 'nullable|url|max:255',
         ]);
 
         if ($request->filled('status')) {
-            $booking->status = $request->status;
+            $booking->status = $request->status === 'Lunas' ? 'Editing' : $request->status;
         }
 
-        if ($request->filled('link_results')) {
+        if ($request->filled('link_results') && empty($booking->link_results)) {
             $booking->link_results = $request->link_results;
         }
 
         $booking->save();
 
-        if ($booking->status === 'Lunas') {
+        if ($booking->status === 'Editing') {
             $this->syncFullPaymentFields($booking);
 
             Mail::raw(
@@ -638,7 +671,6 @@ class BookingController extends Controller
                 'amount_paid' => $amountPaid,
                 'payment_status' => $paymentStatus,
                 'status' => $resolvedStatus,
-                'link_results' => $request->filled('link_results') ? $request->link_results : $booking->link_results,
             ]);
 
             if ($request->filled('admin_feedback') && $booking->email) {
@@ -710,10 +742,10 @@ class BookingController extends Controller
 
         if ($request->amount_paid >= $harga_total) {
             $payment_status = 'full_payment';
-            $status = 'Lunas';
+            $status = 'Editing';
         } elseif ($request->amount_paid > 0) {
             $payment_status = 'down_payment';
-            $status = 'Confirmed';
+            $status = 'Editing';
         } else {
             $payment_status = 'pending';
             $status = $booking->proof_payment ? 'Pending Verification' : 'Pending';

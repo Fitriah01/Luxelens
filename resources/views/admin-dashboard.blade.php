@@ -294,6 +294,79 @@
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 20px;
             margin-top: 25px;
+            align-content: start;
+        }
+
+        .gallery-category-layout {
+            display: grid;
+            grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .gallery-scroll-panel {
+            max-height: 500px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, .01));
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 16px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(191, 161, 90, .34) rgba(255, 255, 255, .03);
+        }
+
+        .gallery-scroll-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .gallery-scroll-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, .03);
+            border-radius: 999px;
+        }
+
+        .gallery-scroll-panel::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(191, 161, 90, .45), rgba(191, 161, 90, .22));
+            border-radius: 999px;
+            border: 1px solid rgba(13, 13, 13, .65);
+        }
+
+        .gallery-scroll-panel::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(191, 161, 90, .6), rgba(191, 161, 90, .3));
+        }
+
+        .gallery-sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 16px 16px 14px;
+            margin-bottom: 2px;
+            background: linear-gradient(180deg, rgba(12, 12, 12, .96), rgba(12, 12, 12, .88));
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+        }
+
+        .gallery-scroll-body {
+            padding: 0 16px 16px;
+        }
+
+        .gallery-empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+            border: 1px dashed rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .015);
+            color: #555;
+            font-size: 12px;
+            text-align: center;
+            padding: 24px;
+            line-height: 1.8;
         }
 
         .gallery-item {
@@ -373,6 +446,12 @@
             border-radius: 6px;
             cursor: pointer;
             width: 100%;
+        }
+
+        @media (max-width: 1180px) {
+            .gallery-category-layout {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* --- Charts --- */
@@ -1047,141 +1126,186 @@
                     </div>
                 </div>
 
-                <form action="/admin/upload-gallery" method="POST" enctype="multipart/form-data"
-                    class="gallery-upload-form">
+                @php
+                    $uploadCategories = [
+                        [
+                            'value' => 'wedding',
+                            'label' => 'Wedding',
+                            'title' => 'Upload Foto Wedding',
+                            'desc' => 'Tambahkan dokumentasi akad, resepsi, dan momen utama pernikahan.',
+                        ],
+                        [
+                            'value' => 'wisuda',
+                            'label' => 'Graduation',
+                            'title' => 'Upload Foto Graduation',
+                            'desc' => 'Kelola hasil sesi wisuda, toga, dan perayaan kelulusan.',
+                        ],
+                        [
+                            'value' => 'prewed',
+                            'label' => 'Pre-Wedding',
+                            'title' => 'Upload Foto Pre-Wedding',
+                            'desc' => 'Masukkan hasil prewed outdoor, studio, maupun cinematic session.',
+                        ],
+                        [
+                            'value' => 'family',
+                            'label' => 'Family',
+                            'title' => 'Upload Foto Family',
+                            'desc' => 'Simpan foto family session, maternity, dan portrait keluarga.',
+                        ],
+                    ];
 
-                    @csrf
+                    $galleriesByCategory = $galleries->groupBy('kategori');
+                @endphp
 
-                    <input type="file" name="foto" required accept="image/*">
-
-                    <select name="kategori" required>
-                        <option value="wedding">Wedding</option>
-                        <option value="wisuda">Graduation</option>
-                        <option value="prewed">Pre-Wedding</option>
-                        <option value="family">Family</option>
-                    </select>
-
-                    <button type="submit" class="btn-gold">UPLOAD PHOTO</button>
-
-                </form>
-
-                {{-- Filter tab bar --}}
-                <div x-data="{ activeTab: 'all' }" style="margin-top:24px;">
-                    <div
-                        style="display:flex;gap:6px;padding:5px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;margin-bottom:20px;flex-wrap:wrap;">
+                <div style="display:grid;grid-template-columns:1fr;gap:24px;margin-top:18px;">
+                    @foreach ($uploadCategories as $category)
                         @php
-                            $tabs = [
-                                'all' => 'Semua',
-                                'wedding' => 'Wedding',
-                                'prewed' => 'Pre-Wedding',
-                                'wisuda' => 'Graduation',
-                                'family' => 'Family',
-                            ];
+                            $categoryPhotos = $galleriesByCategory->get($category['value'], collect());
                         @endphp
-                        @foreach ($tabs as $val => $lbl)
-                            @php $cnt = $val === 'all' ? $galleries->count() : ($galleryCounts[$val] ?? 0); @endphp
-                            <button @click="activeTab='{{ $val }}'"
-                                :style="activeTab === '{{ $val }}' ?
-                                    'background:linear-gradient(135deg,rgba(225,197,100,.18),rgba(225,197,100,.08));border:1px solid rgba(225,197,100,.32);color:#E1C564;' :
-                                    'background:transparent;border:1px solid transparent;color:#555;'"
-                                style="padding:7px 14px;border-radius:8px;cursor:pointer;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;transition:all .2s;font-family:inherit;display:flex;align-items:center;gap:6px;">
-                                {{ $lbl }}
-                                <span
-                                    :style="activeTab === '{{ $val }}' ?
-                                        'background:rgba(225,197,100,.2);color:#E1C564;' :
-                                        'background:rgba(255,255,255,.05);color:#444;'"
-                                    style="font-size:8px;font-weight:900;padding:1px 7px;border-radius:20px;transition:all .2s;">
-                                    {{ $cnt }}
-                                </span>
-                            </button>
-                        @endforeach
-                    </div>
+                        <section
+                            style="padding:22px;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid rgba(191,161,90,.12);border-radius:18px;">
+                            <div class="gallery-category-layout">
+                                <form action="/admin/upload-gallery" method="POST" enctype="multipart/form-data"
+                                    style="display:flex;flex-direction:column;gap:14px;padding:20px;background:#080808;border:1px solid rgba(255,255,255,.04);border-radius:16px;min-height:100%;">
 
-                    <div class="gallery-grid" id="gallery-grid">
-                        @foreach ($galleries as $foto)
-                            <div class="gallery-item" data-kategori="{{ $foto->kategori }}"
-                                x-show="activeTab === 'all' || activeTab === '{{ $foto->kategori }}'">
+                                    @csrf
 
-                                <img src="{{ asset('storage/portfolio/' . $foto->filename) }}"
-                                    alt="{{ $foto->kategori }}">
+                                    <input type="hidden" name="kategori" value="{{ $category['value'] }}">
 
-                                {{-- Kategori label badge --}}
-                                <div
-                                    style="position:absolute;top:8px;left:8px;font-size:7px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1);color:#E1C564;">
-                                    {{ $foto->kategori === 'wisuda' ? 'Graduation' : ($foto->kategori === 'prewed' ? 'Pre-Wedding' : ucfirst($foto->kategori)) }}
+                                    <div
+                                        style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+                                        <div>
+                                            <div
+                                                style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">
+                                                {{ $category['label'] }}</div>
+                                            <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px;">
+                                                {{ $category['title'] }}</div>
+                                            <p style="margin:0;color:#888;font-size:12px;line-height:1.6;">
+                                                {{ $category['desc'] }}</p>
+                                        </div>
+                                        <span
+                                            style="padding:5px 10px;border-radius:999px;background:rgba(191,161,90,.08);border:1px solid rgba(191,161,90,.22);color:var(--gold);font-size:9px;font-weight:800;letter-spacing:.1em;white-space:nowrap;">{{ $categoryPhotos->count() }}
+                                            FOTO</span>
+                                    </div>
+
+                                    <div
+                                        style="margin-top:auto;padding:14px;background:#080808;border:1px solid rgba(255,255,255,.04);border-radius:12px;">
+                                        <input type="file" name="foto" required accept="image/*"
+                                            style="width:100%;margin-bottom:12px;">
+                                        <button type="submit" class="btn-gold" style="width:100%;">UPLOAD
+                                            PHOTO</button>
+                                    </div>
+
+                                </form>
+
+                                <div>
+                                    <div
+                                        style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+                                        <div style="font-size:14px;font-weight:700;color:#fff;">Galeri
+                                            {{ $category['label'] }}</div>
+                                        <div
+                                            style="font-size:10px;color:#555;letter-spacing:.12em;text-transform:uppercase;">
+                                            Aset foto kategori {{ $category['label'] }}</div>
+                                    </div>
+
+                                    @if ($categoryPhotos->isNotEmpty())
+                                        <div
+                                            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;">
+                                            @foreach ($categoryPhotos as $foto)
+                                                <div class="gallery-item">
+
+                                                    <img src="{{ $foto->image_url }}" alt="{{ $foto->kategori }}">
+
+                                                    <div
+                                                        style="position:absolute;top:8px;left:8px;font-size:7px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1);color:#E1C564;">
+                                                        {{ $foto->kategori === 'wisuda' ? 'Graduation' : ($foto->kategori === 'prewed' ? 'Pre-Wedding' : ucfirst($foto->kategori)) }}
+                                                    </div>
+
+                                                    <div class="gallery-item-actions">
+                                                        <form action="/admin/delete-gallery/{{ $foto->id }}"
+                                                            method="POST">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="btn-delete">REMOVE</button>
+                                                        </form>
+
+                                                        <form action="{{ route('admin.update.gallery', $foto->id) }}"
+                                                            method="POST" enctype="multipart/form-data"
+                                                            class="gallery-item-update-form">
+                                                            @csrf
+                                                            <input type="file" name="foto" accept="image/*"
+                                                                required>
+                                                            <button type="submit" class="btn-update">UPDATE</button>
+                                                        </form>
+                                                    </div>
+
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div
+                                            style="display:flex;align-items:center;justify-content:center;min-height:180px;border:1px dashed rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.015);color:#555;font-size:12px;text-align:center;padding:24px;line-height:1.8;">
+                                            Belum ada foto untuk kategori {{ $category['label'] }}.<br>Upload foto
+                                            pertama melalui form di sebelah kiri.
+                                        </div>
+                                    @endif
                                 </div>
+                            </div>
+                            <div class="gallery-scroll-panel">
+                                <div class="gallery-sticky-header">
 
-                                <div class="gallery-item-actions">
-                                    <form action="/admin/delete-gallery/{{ $foto->id }}" method="POST">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn-delete">REMOVE</button>
-                                    </form>
-
-                                    <form action="{{ route('admin.update.gallery', $foto->id) }}" method="POST"
-                                        enctype="multipart/form-data" class="gallery-item-update-form">
-                                        @csrf
-                                        <input type="file" name="foto" accept="image/*" required>
-                                        <button type="submit" class="btn-update">UPDATE</button>
-                                    </form>
                                 </div>
 
                             </div>
-                        @endforeach
-                    </div>
-
-                </div>{{-- /x-data --}}
-
-            </div>
-
-        </div>
 
 
 
-        <div id="modalFotografer"
-            style="display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.9); backdrop-filter: blur(15px); justify-content: center; align-items: center;">
+                            <div class="gallery-scroll-body">
+                                @if ($categoryPhotos->isNotEmpty())
+                                    <div class="gallery-grid"
+                                        style="margin-top:0;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;">
+                                        @foreach ($categoryPhotos as $foto)
+                                            <div class="gallery-item">
 
-            <div style="background:#111; padding:40px; border:1px solid var(--gold); width:400px; border-radius:30px;">
+                                                <img src="{{ $foto->image_url }}" alt="{{ $foto->kategori }}">
 
-                <h3
-                    style="font-family:'Playfair Display', serif; color:var(--gold); margin-bottom:25px; text-align:center;">
+                                                <div
+                                                    style="position:absolute;top:8px;left:8px;font-size:7px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1);color:#E1C564;">
+                                                    {{ $foto->kategori === 'wisuda' ? 'Graduation' : ($foto->kategori === 'prewed' ? 'Pre-Wedding' : ucfirst($foto->kategori)) }}
+                                                </div>
 
-                    Photographer Schedule</h3>
+                                                <div class="gallery-item-actions">
+                                                    <form action="/admin/delete-gallery/{{ $foto->id }}"
+                                                        method="POST">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn-delete">REMOVE</button>
+                                                    </form>
 
-                <form id="photographerForm" action="{{ route('admin.photographers.store') }}" method="POST"
-                    style="margin-bottom: 25px;">
+                                                    <form action="{{ route('admin.update.gallery', $foto->id) }}"
+                                                        method="POST" enctype="multipart/form-data"
+                                                        class="gallery-item-update-form">
+                                                        @csrf
+                                                        <input type="file" name="foto" accept="image/*"
+                                                            required>
+                                                        <button type="submit" class="btn-update">UPDATE</button>
+                                                    </form>
+                                                </div>
 
-                    @csrf
-                    <input type="hidden" name="_method" id="photographer_method" value="POST">
-                    <input type="hidden" name="photographer_id" id="photographer_id">
-
-                    <input type="text" name="name" id="photographer_name" placeholder="Full Name" required
-                        style="width:94%; padding:12px; background:#000; border:1px solid #333; color:white; border-radius:10px; margin-bottom:10px;">
-
-                    <input type="text" name="team_name" id="photographer_team_name" placeholder="Team Name"
-                        required
-                        style="width:94%; padding:12px; background:#000; border:1px solid #333; color:white; border-radius:10px; margin-bottom:15px;">
-
-                    <input type="text" name="specialization" id="photographer_specialization"
-                        placeholder="Specialization"
-                        style="width:94%; padding:12px; background:#000; border:1px solid #333; color:white; border-radius:10px; margin-bottom:15px;">
-
-                    <input type="text" name="phone" id="photographer_phone" placeholder="Phone / WA"
-                        style="width:94%; padding:12px; background:#000; border:1px solid #333; color:white; border-radius:10px; margin-bottom:15px;">
-                    <div id="photographerWorkDays"
-                        style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 15px;">
-                        @foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day)
-                            <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#ccc;">
-                                <input type="checkbox" name="work_days[]" value="{{ $day }}"
-                                    style="width:14px; height:14px;">
-                                {{ ucfirst($day) }}
-                            </label>
-                        @endforeach
-                    </div>
-                    <button type="submit" id="photographerSubmitBtn" class="btn-gold" style="width:100%">+ ADD NEW
-                        STAFF</button>
-                    <button type="button" id="photographerCancelEditBtn" class="btn-action"
-                        style="width:100%; margin-top:10px; display:none; background:#333; color:#fff;">CANCEL
-                        EDIT</button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="gallery-empty-state">
+                                        Belum ada foto untuk kategori {{ $category['label'] }}.<br>Upload foto
+                                        pertama melalui form di sebelah kiri.
+                                    </div>
+                                @endif
+                            </div>
+                </div>
+                <button type="submit" id="photographerSubmitBtn" class="btn-gold" style="width:100%">+ ADD NEW
+                    STAFF</button>
+                <button type="button" id="photographerCancelEditBtn" class="btn-action"
+                    style="width:100%; margin-top:10px; display:none; background:#333; color:#fff;">CANCEL
+                    EDIT</button>
 
                 </form>
 

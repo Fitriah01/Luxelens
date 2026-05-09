@@ -1,5 +1,91 @@
 ﻿<div id="luxelens-admin-wrapper" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = ''.e($dashboardWrapperKey).''; ?>wire:key="<?php echo e($dashboardWrapperKey); ?>" style="display:flex;height:100vh;overflow:hidden;"
     x-data="{ open: true }">
+    <style>
+        .lux-gallery-category-layout {
+            display: grid;
+            grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .lux-gallery-scroll {
+            max-height: 500px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, .01));
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 16px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(225, 197, 100, .28) rgba(255, 255, 255, .03);
+        }
+
+        .lux-gallery-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .lux-gallery-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, .03);
+            border-radius: 999px;
+        }
+
+        .lux-gallery-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(225, 197, 100, .42), rgba(225, 197, 100, .2));
+            border-radius: 999px;
+            border: 1px solid rgba(5, 5, 5, .6);
+        }
+
+        .lux-gallery-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(225, 197, 100, .58), rgba(225, 197, 100, .28));
+        }
+
+        .lux-gallery-sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 16px 16px 14px;
+            margin-bottom: 2px;
+            background: linear-gradient(180deg, rgba(10, 10, 10, .96), rgba(10, 10, 10, .88));
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+        }
+
+        .lux-gallery-scroll-body {
+            padding: 0 16px 16px;
+        }
+
+        .lux-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
+            align-content: start;
+        }
+
+        .lux-gallery-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+            border: 1px dashed rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .015);
+            color: #444;
+            font-size: 12px;
+            text-align: center;
+            padding: 24px;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 1180px) {
+            .lux-gallery-category-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 
     
     <aside
@@ -555,49 +641,132 @@ unset($__split);
                         <div style="font-size:11px;color:#444;">Upload dan kelola foto portofolio studio.</div>
                     </div>
 
-                    <form action="/admin/upload-gallery" method="POST" enctype="multipart/form-data"
-                        style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:32px;padding:20px;background:#080808;border:1px solid rgba(255,255,255,.04);border-radius:12px;">
-                        <?php echo csrf_field(); ?>
-                        <input type="file" name="foto" required accept="image/*"
-                            style="flex:1 1 260px;min-width:0;padding:10px 14px;font-size:12px;">
-                        <select name="kategori" required style="padding:10px 14px;font-size:12px;min-width:160px;">
-                            <option value="wedding">Wedding</option>
-                            <option value="wisuda">Graduation</option>
-                            <option value="prewed">Pre-Wedding</option>
-                            <option value="family">Family</option>
-                        </select>
-                        <button type="submit"
-                            style="padding:10px 24px;background:#E1C564;border:none;color:#050505;font-size:11px;font-weight:800;letter-spacing:.1em;cursor:pointer;border-radius:10px;white-space:nowrap;transition:opacity .2s;"
-                            onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">UPLOAD
-                            PHOTO</button>
-                    </form>
+                    <?php
+                        $uploadCategories = [
+                            [
+                                'value' => 'wedding',
+                                'label' => 'Wedding',
+                                'title' => 'Upload Foto Wedding',
+                                'desc' => 'Tambahkan dokumentasi akad, resepsi, dan momen hari pernikahan.',
+                            ],
+                            [
+                                'value' => 'wisuda',
+                                'label' => 'Graduation',
+                                'title' => 'Upload Foto Graduation',
+                                'desc' => 'Kumpulkan foto wisuda, toga, dan celebration session.',
+                            ],
+                            [
+                                'value' => 'prewed',
+                                'label' => 'Pre-Wedding',
+                                'title' => 'Upload Foto Pre-Wedding',
+                                'desc' => 'Masukkan hasil sesi prewed outdoor maupun indoor.',
+                            ],
+                            [
+                                'value' => 'family',
+                                'label' => 'Family',
+                                'title' => 'Upload Foto Family',
+                                'desc' => 'Kelola foto keluarga, maternity, dan intimate portrait.',
+                            ],
+                        ];
 
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;">
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $galleries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $foto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                            <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:#111;group"
-                                onmouseover="this.querySelector('.gal-overlay').style.opacity='1';this.querySelector('img').style.transform='scale(1.08) rotate(1deg)';this.querySelector('img').style.filter='brightness(.4)';"
-                                onmouseout="this.querySelector('.gal-overlay').style.opacity='0';this.querySelector('img').style.transform='scale(1)';this.querySelector('img').style.filter='brightness(1)';">
-                                <img src="<?php echo e(asset('storage/portfolio/' . $foto->filename)); ?>"
-                                    alt="<?php echo e($foto->kategori); ?>"
-                                    style="width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s,filter .5s;">
-                                <div class="gal-overlay"
-                                    style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;padding:10px;gap:6px;opacity:0;transition:opacity .3s;">
-                                    <form action="/admin/delete-gallery/<?php echo e($foto->id); ?>" method="POST">
-                                        <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
-                                        <button type="submit"
-                                            style="width:100%;padding:7px;background:rgba(255,68,68,.85);backdrop-filter:blur(5px);border:none;color:#fff;font-size:9px;font-weight:800;cursor:pointer;border-radius:8px;letter-spacing:.1em;">REMOVE</button>
-                                    </form>
-                                    <form action="<?php echo e(route('admin.update.gallery', $foto->id)); ?>" method="POST"
-                                        enctype="multipart/form-data"
-                                        style="display:flex;flex-direction:column;gap:4px;">
+                        $galleriesByCategory = $galleries->groupBy('kategori');
+                    ?>
+
+                    <div style="display:grid;grid-template-columns:1fr;gap:24px;">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $uploadCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <?php
+                                $categoryPhotos = $galleriesByCategory->get($category['value'], collect());
+                            ?>
+                            <section
+                                style="padding:22px;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid rgba(225,197,100,.08);border-radius:18px;box-shadow:0 14px 30px rgba(0,0,0,.16);">
+                                <div class="lux-gallery-category-layout">
+                                    <form action="/admin/upload-gallery" method="POST" enctype="multipart/form-data"
+                                        style="display:flex;flex-direction:column;gap:14px;padding:20px;background:#080808;border:1px solid rgba(255,255,255,.04);border-radius:16px;min-height:100%;">
                                         <?php echo csrf_field(); ?>
-                                        <input type="file" name="foto" accept="image/*" required
-                                            style="font-size:10px;padding:4px;border-radius:6px !important;">
-                                        <button type="submit"
-                                            style="width:100%;padding:6px;background:rgba(191,161,90,.9);backdrop-filter:blur(5px);border:none;color:#000;font-size:9px;font-weight:800;cursor:pointer;border-radius:6px;letter-spacing:.1em;">UPDATE</button>
+                                        <input type="hidden" name="kategori" value="<?php echo e($category['value']); ?>">
+
+                                        <div
+                                            style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                                            <div>
+                                                <div
+                                                    style="font-size:10px;color:#E1C564;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px;">
+                                                    <?php echo e($category['label']); ?></div>
+                                                <div
+                                                    style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.4;">
+                                                    <?php echo e($category['title']); ?></div>
+                                                <div style="font-size:11px;color:#555;line-height:1.7;">
+                                                    <?php echo e($category['desc']); ?></div>
+                                            </div>
+                                            <span
+                                                style="padding:5px 10px;border-radius:999px;background:rgba(225,197,100,.08);border:1px solid rgba(225,197,100,.18);color:#E1C564;font-size:9px;font-weight:800;letter-spacing:.1em;white-space:nowrap;"><?php echo e($categoryPhotos->count()); ?>
+
+                                                FOTO</span>
+                                        </div>
+
+                                        <div style="margin-top:auto;">
+                                            <input type="file" name="foto" required accept="image/*"
+                                                style="width:100%;padding:10px 14px;font-size:12px;margin-bottom:12px;">
+                                            <button type="submit"
+                                                style="width:100%;padding:11px 18px;background:#E1C564;border:none;color:#050505;font-size:11px;font-weight:800;letter-spacing:.12em;cursor:pointer;border-radius:10px;text-transform:uppercase;transition:opacity .2s;"
+                                                onmouseover="this.style.opacity='.82'"
+                                                onmouseout="this.style.opacity='1'">Upload Photo</button>
+                                        </div>
                                     </form>
+
+                                    <div class="lux-gallery-scroll">
+                                        <div class="lux-gallery-sticky-header">
+                                            <div style="font-size:13px;font-weight:700;color:#fff;">Galeri
+                                                <?php echo e($category['label']); ?></div>
+                                            <div
+                                                style="font-size:10px;color:#444;letter-spacing:.12em;text-transform:uppercase;">
+                                                Aset foto kategori <?php echo e($category['label']); ?></div>
+                                        </div>
+
+                                        <div class="lux-gallery-scroll-body">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($categoryPhotos->isNotEmpty()): ?>
+                                                <div class="lux-gallery-grid">
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $categoryPhotos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $foto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                                        <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:#111;"
+                                                            onmouseover="this.querySelector('.gal-overlay').style.opacity='1';this.querySelector('img').style.transform='scale(1.08) rotate(1deg)';this.querySelector('img').style.filter='brightness(.4)';"
+                                                            onmouseout="this.querySelector('.gal-overlay').style.opacity='0';this.querySelector('img').style.transform='scale(1)';this.querySelector('img').style.filter='brightness(1)';">
+                                                            <img src="<?php echo e($foto->image_url); ?>"
+                                                                alt="<?php echo e($foto->kategori); ?>"
+                                                                style="width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s,filter .5s;">
+                                                            <div class="gal-overlay"
+                                                                style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;padding:10px;gap:6px;opacity:0;transition:opacity .3s;">
+                                                                <form
+                                                                    action="/admin/delete-gallery/<?php echo e($foto->id); ?>"
+                                                                    method="POST">
+                                                                    <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                                                                    <button type="submit"
+                                                                        style="width:100%;padding:7px;background:rgba(255,68,68,.85);backdrop-filter:blur(5px);border:none;color:#fff;font-size:9px;font-weight:800;cursor:pointer;border-radius:8px;letter-spacing:.1em;">REMOVE</button>
+                                                                </form>
+                                                                <form
+                                                                    action="<?php echo e(route('admin.update.gallery', $foto->id)); ?>"
+                                                                    method="POST" enctype="multipart/form-data"
+                                                                    style="display:flex;flex-direction:column;gap:4px;">
+                                                                    <?php echo csrf_field(); ?>
+                                                                    <input type="file" name="foto"
+                                                                        accept="image/*" required
+                                                                        style="font-size:10px;padding:4px;border-radius:6px !important;">
+                                                                    <button type="submit"
+                                                                        style="width:100%;padding:6px;background:rgba(191,161,90,.9);backdrop-filter:blur(5px);border:none;color:#000;font-size:9px;font-weight:800;cursor:pointer;border-radius:6px;letter-spacing:.1em;">UPDATE</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="lux-gallery-empty">
+                                                    Belum ada foto untuk kategori <?php echo e($category['label']); ?>.<br>Upload
+                                                    foto
+                                                    pertama melalui form di sebelah kiri.
+                                                </div>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            </section>
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                     </div>
                 </div>
